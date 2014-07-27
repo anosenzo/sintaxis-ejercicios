@@ -11,42 +11,111 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static const int CANT_ESTADOS = 4;
+static const int CANT_PALABRAS_ALFABETO = 3;
+
+static const int COLUMNA_SIGNO = 0;
+static const int COLUMNA_DIGITO = 1;
+static const int COLUMNA_OTRO_CARACTER = 2;
+
 int EsCadenaVacia(char *s);
 int LongitudCadena(char *s);
 char* Concantena2Cadenas(char* s1, char *s2, char *s3);
 
+void InicializarTablaDeTransicionesDelAFD(
+		int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO]);
+int validarCadenaConAFD(int tablaDeTranscionDelAFD[4][3], char *cadenaAEvaluar);
+int determinarProximoEstado(int tablaDeTranscionDelAFD[4][3], int estadoActual,
+		char caracter);
+int obtenerColumanAPartirDeCaracter(char caracter);
 
 int main(void) {
 
 	char cadenaAux1[] = "-1234";
 	char cadenaAux2[] = "12*34";
-	char cadenaAux3[LongitudCadena(cadenaAux1)+LongitudCadena(cadenaAux2)+1];
 
-	char cadenaVacia[] = "";
+	int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO] = {
+			{ 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 }, { 3, 3, 3 } };
 
-	if (EsCadenaVacia(cadenaAux1))
-		printf("La cadena %s es vacia \n", cadenaAux1);
-	else
-		printf("La cadena %s NO es vacia \n", cadenaAux1);
+	//InicializarTablaDeTransicionesDelAFD();
 
-	if (EsCadenaVacia(cadenaVacia))
-		printf("La cadena %s es vacia \n", cadenaVacia);
-	else
-		printf("La cadena %s NO es vacia \n", cadenaVacia);
+	printf("El AFD %s la cadena: %s \n", validarCadenaConAFD(tablaDeTransciciones, cadenaAux1) ? "RECONOCE" : "RECHAZA", cadenaAux1);
 
-	printf("La longitud de la cadena Hola es %i \n", LongitudCadena("Hola"));
-	printf("La longitud de la cadena vacia es %i \n", LongitudCadena(""));
-
-	printf("La concatenacion de Hola y Chau es %s \n", Concantena2Cadenas(cadenaAux1,cadenaAux2,cadenaAux3));
+	printf("El AFD %s la cadena: %s \n", validarCadenaConAFD(tablaDeTransciciones, cadenaAux1) ? "RECONOCE" : "RECHAZA", cadenaAux2);
 
 	return EXIT_SUCCESS;
+}
+
+void InicializarTablaDeTransicionesDelAFD(
+		int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO]) {
+
+	int tablaDeTranscicionesAux[CANT_ESTADOS][CANT_PALABRAS_ALFABETO] = { { 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 },
+			{ 3, 3, 3 } };
+
+	tablaDeTransciciones = tablaDeTranscicionesAux;
+
+}
+
+int validarCadenaConAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar) {
+
+	int i = 0;
+
+	int estadoFinal = 2;
+	int estadoInicial = 0;
+
+	int estadoActual = estadoInicial;
+
+	while (cadenaAEvaluar[i] != '\0') {
+		estadoActual = determinarProximoEstado(tablaDeTranscionDelAFD,
+				estadoActual, cadenaAEvaluar[i]);
+	}
+
+	return estadoActual == estadoFinal;
+
+}
+
+int determinarProximoEstado(int tablaDeTranscionDelAFD[4][3], int estadoActual,
+		char caracter) {
+
+	int columnaTablaDeTransicion = obtenerColumanAPartirDeCaracter(caracter);
+
+	return tablaDeTranscionDelAFD[estadoActual][columnaTablaDeTransicion];
+
+}
+
+int obtenerColumanAPartirDeCaracter(char caracter) {
+
+	int columnaCorrespondiente;
+
+	switch (caracter) {
+		case '+':
+		case '-':
+			columnaCorrespondiente = COLUMNA_SIGNO;
+			break;
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			columnaCorrespondiente = COLUMNA_DIGITO;
+			break;
+		default:
+			columnaCorrespondiente = COLUMNA_OTRO_CARACTER;
+			break;
+	}
+
+	return columnaCorrespondiente;
 }
 
 int LongitudCadena(char *s) {
 
 	int i = 0;
 
-	while (s[i] != 0) {
+	while (s[i] != '\0') {
 
 		i++;
 
@@ -58,7 +127,7 @@ int LongitudCadena(char *s) {
 
 int EsCadenaVacia(char *s) {
 
-	return s[0] != '\0';
+	return s[0] == '\0';
 
 	if (s[0] == '\0')
 		return 1;
@@ -79,11 +148,11 @@ char* Concantena2Cadenas(char* s1, char *s2, char *s3) {
 
 	for (int i = 0; i < longitudCadena2; i++) {
 
-		s3[i+longitudCadena1] = s2[i];
+		s3[i + longitudCadena1] = s2[i];
 
 	}
 
-	s3[longitudCadena1 + longitudCadena2 ] = '\0';
+	s3[longitudCadena1 + longitudCadena2] = '\0';
 
 	return s3;
 

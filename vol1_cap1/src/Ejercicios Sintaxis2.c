@@ -45,7 +45,7 @@ int LongitudCadena(char *s) {
 
 	int i = 0;
 
-	while (s[i] != 0) {
+	while (s[i] != '\0') {
 
 		i++;
 
@@ -57,7 +57,7 @@ int LongitudCadena(char *s) {
 
 int EsCadenaVacia(char *s) {
 
-	return s[0] != '\0';
+	return s[0] == '\0';
 
 	if (s[0] == '\0')
 		return 1;
