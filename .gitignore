@@ -1,3 +1,7 @@
+# Eclipse files
+*.project
+*.cproject
+
 # Object files
 *.o
 *.ko

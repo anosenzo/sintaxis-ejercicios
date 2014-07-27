@@ -48,7 +48,7 @@ int main(void) {
 	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaCorrecta2);
 	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaIncorrecta2);
 
-	return EXIT_SUCCESS;
+		return EXIT_SUCCESS;
 }
 
 void mostrarValidacionDeAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar){
@@ -78,14 +78,18 @@ void InicializarTablaDeTransicionesDelAFD(
 
 int validarCadenaConAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar) {
 
-	int i = 0;
-
-	int estadoFinal = 2;
 	int estadoInicial = 0;
+	int estadoFinal = 2;
+	int estadoRechazo = 3;
 
 	int estadoActual = estadoInicial;
 
-	while (cadenaAEvaluar[i] != '\0') {
+	int i = 0;
+
+	// Algoritmo 1 (Ejercicio 14)
+	//while (cadenaAEvaluar[i] != '\0') {
+	// Algoritmo 2 (Ejercicio 15)
+	while(cadenaAEvaluar[i] != '\0' && estadoActual != estadoRechazo){
 		estadoActual = determinarProximoEstado(tablaDeTranscionDelAFD,
 				estadoActual, cadenaAEvaluar[i]);
 
