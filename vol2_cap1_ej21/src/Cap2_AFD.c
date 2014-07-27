@@ -11,12 +11,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CANT_ESTADOS 4
-#define CANT_PALABRAS_ALFABETO 3
+#define CANT_ESTADOS 7
+#define CANT_PALABRAS_ALFABETO 5
+#define CANT_ESTADOS_FINALES 2
 
 static const int COLUMNA_SIGNO = 0;
 static const int COLUMNA_DIGITO = 1;
-static const int COLUMNA_OTRO_CARACTER = 2;
+static const int COLUMNA_CARACTER_FIN_PALABRA = 2;
+static const int COLUMNA_OTRO_CARACTER = 3;
+static const int COLUMNA_CARACTER_FIN_TEXTO = 4;
+
+static const char CARACTER_FIN_PALABRA = '#';
+static const char CARACTER_FIN_TEXTO = '\0';
 
 int EsCadenaVacia(char *s);
 int LongitudCadena(char *s);
@@ -24,36 +30,47 @@ char* Concantena2Cadenas(char* s1, char *s2, char *s3);
 
 void InicializarTablaDeTransicionesDelAFD(
 		int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO]);
-int validarCadenaConAFD(int tablaDeTranscionDelAFD[4][3], char *cadenaAEvaluar);
-int determinarProximoEstado(int tablaDeTranscionDelAFD[4][3], int estadoActual,
-		char caracter);
+int ObtenerCantidadDePalabrasValidasConAFD(
+		int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO],
+		int estadosFinales[CANT_ESTADOS_FINALES], int estadoRechazo,
+		char *cadenaAEvaluar);
+int determinarProximoEstado(
+		int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO],
+		int estadoActual, char caracter);
 int obtenerColumanAPartirDeCaracter(char caracter);
-void mostrarValidacionDeAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar);
-
+void mostrarCantidadPalabrasValidasPorAFD(
+		int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO],
+		int estadosFinales[CANT_ESTADOS_FINALES], int estadoRechazo,
+		char *cadenaAEvaluar);
+int esEstadoFinal(int estadoActual, int estadosFinales[CANT_ESTADOS_FINALES]);
 
 int main(void) {
 
-	char cadenaCorrecta[] = "-1234";
-	char cadenaIncorrecta[] = "12*34";
-	char cadenaCorrecta2[] = "4531235151";
-	char cadenaIncorrecta2[] = "+-1234";
+	char texto[] = "-123#4A67#01234567#ZZZZZ#86-0,2;4/#+1234123#b4444";
 
-	int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO];// = {
-			//{ 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 }, { 3, 3, 3 } };
+	int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO]; // = {
+	//{ 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 }, { 3, 3, 3 } };
 
-	InicializarTablaDeTransicionesDelAFD( tablaDeTransciciones);
+	InicializarTablaDeTransicionesDelAFD(tablaDeTransciciones);
 
-	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaCorrecta);
-	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaIncorrecta);
-	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaCorrecta2);
-	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaIncorrecta2);
+	int estadosFinales[] = { 3, 4 };
+	int estadoRechazo = 5;
 
-		return EXIT_SUCCESS;
+	mostrarCantidadPalabrasValidasPorAFD(tablaDeTransciciones, estadosFinales,
+			estadoRechazo, texto);
+
+	return EXIT_SUCCESS;
 }
 
-void mostrarValidacionDeAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar){
+void mostrarCantidadPalabrasValidasPorAFD(
+		int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO],
+		int estadosFinales[CANT_ESTADOS_FINALES],
+		int estadoRechazo, char *cadenaAEvaluar) {
 
-	printf("El AFD %s la cadena: %s \n", validarCadenaConAFD(tablaDeTranscionDelAFD, cadenaAEvaluar) ? "RECONOCE" : "RECHAZA", cadenaAEvaluar);
+	printf("El AFD detecto %d palabras validas en la cadena: %s \n",
+			ObtenerCantidadDePalabrasValidasConAFD(tablaDeTranscionDelAFD,
+					estadosFinales, estadoRechazo, cadenaAEvaluar),
+			cadenaAEvaluar);
 
 }
 
@@ -63,12 +80,14 @@ void mostrarValidacionDeAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABR
 void InicializarTablaDeTransicionesDelAFD(
 		int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO]) {
 
-	int tablaDeTranscicionesAux[CANT_ESTADOS][CANT_PALABRAS_ALFABETO] = { { 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 },
-			{ 3, 3, 3 } };
+	int tablaDeTranscicionesAux[CANT_ESTADOS][CANT_PALABRAS_ALFABETO] = { { 1,
+			2, 0, 5, 6 }, { 5, 2, 0, 5, 6 }, { 5, 2, 3, 5, 4 },
+			{ 1, 2, 0, 5, 6 }, { 6, 6, 6, 6, 6 }, { 5, 5, 0, 5, 6 }, { 6, 6, 6,
+					6, 6 } };
 
-	for(int i=0;i<CANT_ESTADOS;i++){
+	for (int i = 0; i < CANT_ESTADOS; i++) {
 
-		for(int j=0;j<CANT_PALABRAS_ALFABETO;j++){
+		for (int j = 0; j < CANT_PALABRAS_ALFABETO; j++) {
 			tablaDeTransciciones[i][j] = tablaDeTranscicionesAux[i][j];
 		}
 
@@ -76,32 +95,57 @@ void InicializarTablaDeTransicionesDelAFD(
 
 }
 
-int validarCadenaConAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar) {
+int ObtenerCantidadDePalabrasValidasConAFD(
+		int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO],
+		int estadosFinales[CANT_ESTADOS_FINALES], int estadoRechazo,
+		char *cadenaAEvaluar) {
+
+	int cantPalabrasReconocidasPorAFD = 0;
 
 	int estadoInicial = 0;
-	int estadoFinal = 2;
-	int estadoRechazo = 3;
 
 	int estadoActual = estadoInicial;
 
 	int i = 0;
 
-	// Algoritmo 1 (Ejercicio 14)
-	//while (cadenaAEvaluar[i] != '\0') {
-	// Algoritmo 2 (Ejercicio 15)
-	while(cadenaAEvaluar[i] != '\0' && estadoActual != estadoRechazo){
-		estadoActual = determinarProximoEstado(tablaDeTranscionDelAFD,
-				estadoActual, cadenaAEvaluar[i]);
+	while (cadenaAEvaluar[i] != CARACTER_FIN_TEXTO) {
 
-		i++;
+		estadoActual = estadoInicial;
+
+		while (! esEstadoFinal(estadoActual, estadosFinales)
+				&& estadoActual != 6) {
+
+			estadoActual = determinarProximoEstado(tablaDeTranscionDelAFD,
+					estadoActual, cadenaAEvaluar[i]);
+
+			i++;
+		}
+
+		if (esEstadoFinal(estadoActual, estadosFinales))
+			cantPalabrasReconocidasPorAFD++;
 	}
 
-	return estadoActual == estadoFinal;
+	return cantPalabrasReconocidasPorAFD;
 
 }
 
-int determinarProximoEstado(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], int estadoActual,
-		char caracter) {
+int esEstadoFinal(int estadoActual, int estadosFinales[CANT_ESTADOS_FINALES]) {
+
+	int encontrado = 0;
+
+	for (int i = 0; i < CANT_ESTADOS_FINALES && encontrado == 0; i++) {
+
+		if (estadoActual == estadosFinales[i])
+			encontrado = 1;
+	}
+
+	return encontrado;
+
+}
+
+int determinarProximoEstado(
+		int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO],
+		int estadoActual, char caracter) {
 
 	int columnaTablaDeTransicion = obtenerColumanAPartirDeCaracter(caracter);
 
@@ -114,24 +158,31 @@ int obtenerColumanAPartirDeCaracter(char caracter) {
 	int columnaCorrespondiente;
 
 	switch (caracter) {
-		case '+':
-		case '-':
-			columnaCorrespondiente = COLUMNA_SIGNO;
-			break;
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			columnaCorrespondiente = COLUMNA_DIGITO;
-			break;
-		default:
-			columnaCorrespondiente = COLUMNA_OTRO_CARACTER;
-			break;
+	case '+':
+	case '-':
+		columnaCorrespondiente = COLUMNA_SIGNO;
+		break;
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		columnaCorrespondiente = COLUMNA_DIGITO;
+		break;
+	case '#':
+		columnaCorrespondiente = COLUMNA_CARACTER_FIN_PALABRA;
+		break;
+	case '\0':
+		columnaCorrespondiente = COLUMNA_CARACTER_FIN_TEXTO;
+		break;
+	default:
+		columnaCorrespondiente = COLUMNA_OTRO_CARACTER;
+		break;
 	}
 
 	return columnaCorrespondiente;
