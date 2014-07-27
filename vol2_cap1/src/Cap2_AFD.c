@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static const int CANT_ESTADOS = 4;
-static const int CANT_PALABRAS_ALFABETO = 3;
+#define CANT_ESTADOS 4
+#define CANT_PALABRAS_ALFABETO 3
 
 static const int COLUMNA_SIGNO = 0;
 static const int COLUMNA_DIGITO = 1;
@@ -28,31 +28,51 @@ int validarCadenaConAFD(int tablaDeTranscionDelAFD[4][3], char *cadenaAEvaluar);
 int determinarProximoEstado(int tablaDeTranscionDelAFD[4][3], int estadoActual,
 		char caracter);
 int obtenerColumanAPartirDeCaracter(char caracter);
+void mostrarValidacionDeAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar);
+
 
 int main(void) {
 
-	char cadenaAux1[] = "-1234";
-	char cadenaAux2[] = "12*34";
+	char cadenaCorrecta[] = "-1234";
+	char cadenaIncorrecta[] = "12*34";
+	char cadenaCorrecta2[] = "4531235151";
+	char cadenaIncorrecta2[] = "+-1234";
 
-	int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO] = {
-			{ 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 }, { 3, 3, 3 } };
+	int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO];// = {
+			//{ 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 }, { 3, 3, 3 } };
 
-	//InicializarTablaDeTransicionesDelAFD();
+	InicializarTablaDeTransicionesDelAFD( tablaDeTransciciones);
 
-	printf("El AFD %s la cadena: %s \n", validarCadenaConAFD(tablaDeTransciciones, cadenaAux1) ? "RECONOCE" : "RECHAZA", cadenaAux1);
-
-	printf("El AFD %s la cadena: %s \n", validarCadenaConAFD(tablaDeTransciciones, cadenaAux1) ? "RECONOCE" : "RECHAZA", cadenaAux2);
+	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaCorrecta);
+	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaIncorrecta);
+	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaCorrecta2);
+	mostrarValidacionDeAFD(tablaDeTransciciones, cadenaIncorrecta2);
 
 	return EXIT_SUCCESS;
 }
 
+void mostrarValidacionDeAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], char *cadenaAEvaluar){
+
+	printf("El AFD %s la cadena: %s \n", validarCadenaConAFD(tablaDeTranscionDelAFD, cadenaAEvaluar) ? "RECONOCE" : "RECHAZA", cadenaAEvaluar);
+
+}
+
+// calculo que funciona sin pasar la dir. con & porque sera como los Strings que estoy pasando la direccion siempre en este caso
+// (*)[3] o algo asi.
+//
 void InicializarTablaDeTransicionesDelAFD(
 		int tablaDeTransciciones[CANT_ESTADOS][CANT_PALABRAS_ALFABETO]) {
 
 	int tablaDeTranscicionesAux[CANT_ESTADOS][CANT_PALABRAS_ALFABETO] = { { 1, 2, 3 }, { 3, 2, 3 }, { 3, 2, 3 },
 			{ 3, 3, 3 } };
 
-	tablaDeTransciciones = tablaDeTranscicionesAux;
+	for(int i=0;i<CANT_ESTADOS;i++){
+
+		for(int j=0;j<CANT_PALABRAS_ALFABETO;j++){
+			tablaDeTransciciones[i][j] = tablaDeTranscicionesAux[i][j];
+		}
+
+	}
 
 }
 
@@ -68,13 +88,15 @@ int validarCadenaConAFD(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_A
 	while (cadenaAEvaluar[i] != '\0') {
 		estadoActual = determinarProximoEstado(tablaDeTranscionDelAFD,
 				estadoActual, cadenaAEvaluar[i]);
+
+		i++;
 	}
 
 	return estadoActual == estadoFinal;
 
 }
 
-int determinarProximoEstado(int tablaDeTranscionDelAFD[4][3], int estadoActual,
+int determinarProximoEstado(int tablaDeTranscionDelAFD[CANT_ESTADOS][CANT_PALABRAS_ALFABETO], int estadoActual,
 		char caracter) {
 
 	int columnaTablaDeTransicion = obtenerColumanAPartirDeCaracter(caracter);
